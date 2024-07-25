@@ -1,7 +1,7 @@
 from os.path import abspath, dirname, join
 from pathlib import Path
 from typing import Optional
-
+import os
 from dynaconf import Dynaconf
 from starlette_context import context
 
@@ -32,7 +32,6 @@ global_settings = Dynaconf(
     ]]
 )
 
-
 def get_settings():
     """
     Retrieves the current settings.
@@ -47,7 +46,6 @@ def get_settings():
         return context["settings"]
     except Exception:
         return global_settings
-
 
 # Add local configuration from pyproject.toml of the project being reviewed
 def _find_repository_root() -> Optional[Path]:
@@ -74,7 +72,12 @@ def _find_pyproject() -> Optional[Path]:
         return pyproject if pyproject.is_file() else None
     return None
 
-
 pyproject_path = _find_pyproject()
 if pyproject_path is not None:
     get_settings().load_file(pyproject_path, env=f'tool.{PR_AGENT_TOML_KEY}')
+
+# Added Enterprise URL configuration
+global_settings.enterprise_url = os.getenv("ENTERPRISE_URL", "")
+global_settings.github_url = os.getenv("GITHUB_URL", "https://api.github.com")
+global_settings.github_token = os.getenv("GITHUB_TOKEN")
+
